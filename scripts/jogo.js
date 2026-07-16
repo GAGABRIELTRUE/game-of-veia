@@ -37,9 +37,15 @@ async function conectarSala() {
 
     if (!chave.startsWith("/")) chave = "/" + chave;
 
-    // Altere para localhost:8080 para testar no seu computador
+
+    // Substitua "seu-projeto-backend" pelo subdomínio real que o Render gerou para você
     const servidorHTTP = "https://onrender.com"; 
-    const servidorURL = `wss://whozap-server.onrender.com${chave}`;
+    const servidorURL = `wss://://whozap-server.onrender.com${chave}`;
+
+
+
+
+
     
     try {
         sala_input.disabled = true;
