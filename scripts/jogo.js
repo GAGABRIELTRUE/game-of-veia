@@ -144,10 +144,17 @@ function configurarWebSocket() {
 }
 
 function atualizarTextoStatus() {
+    // Se o socket ainda não recebeu a confirmação de que a sala está preenchida,
+    // mantém o texto parado em modo de espera por segurança.
+    if (statusSimbolo.textContent.includes("Aguardando o segundo jogador")) {
+        return;
+    }
+
     const seuTurno = meuSimbolo === turnoAtual;
     statusSimbolo.textContent = seuTurno ? "Sua vez de jogar!" : "Aguardando jogada do oponente...";
     statusSimbolo.className = seuTurno ? "text-sm text-green-500 dark:text-green-400 mb-4 font-bold h-5 text-center" : "text-sm text-yellow-600 dark:text-yellow-400 mb-4 font-bold h-5 text-center";
 }
+
 
 function limparTodasAsCasas() {
     celulas.forEach(celula => {
