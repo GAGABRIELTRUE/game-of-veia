@@ -38,7 +38,7 @@ async function conectarSala() {
     if (!chave.startsWith("/")) chave = "/" + chave;
 
     // Lembre-se de alterar para o link seguro do seu Render quando fizer deploy final!
-    const servidorHTTP = "https://whozap-server.onrender.com"; 
+    const servidorHTTP = "https://onrender.com"; 
     const servidorURL = `wss://whozap-server.onrender.com${chave}`;
     
     try {
