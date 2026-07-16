@@ -38,7 +38,7 @@ async function conectarSala() {
     if (!chave.startsWith("/")) chave = "/" + chave;
 
     // Altere para localhost:8080 para testar no seu computador
-    const servidorHTTP = "https://whozap-server.onrender.com"; 
+    const servidorHTTP = "https://onrender.com"; 
     const servidorURL = `wss://whozap-server.onrender.com${chave}`;
     
     try {
