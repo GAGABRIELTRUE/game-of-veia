@@ -10,6 +10,7 @@ const botaoTema = document.getElementById('toggle-tema');
 let socket;
 let meuSimbolo = ""; 
 let turnoAtual = ""; 
+let partidaIniciada = false; // Controle limpo de fluxo de jogo
 
 if (localStorage.getItem('theme') === 'light') {
     document.documentElement.classList.remove('dark');
@@ -37,8 +38,8 @@ async function conectarSala() {
 
     if (!chave.startsWith("/")) chave = "/" + chave;
 
-    const servidorHTTP = "https://whozap-server.onrender.com"; 
-    const servidorURL = `wss://whozap-server.onrender.com${chave}`;
+    const servidorHTTP = "https://onrender.com"; 
+    const servidorURL = `wss://://onrender.com${chave}`;
     
     try {
         sala_input.disabled = true;
@@ -65,6 +66,7 @@ function configurarWebSocket() {
     socket.onopen = () => {
         tela_i.classList.add("hidden");
         jogo_i.classList.remove("hidden");
+        partidaIniciada = false; // Aguardando jogador 2
         statusSimbolo.textContent = "Aguardando o segundo jogador entrar...";
         statusSimbolo.className = "text-sm text-yellow-600 dark:text-yellow-400 mb-4 font-bold h-5 text-center";
         limparTodasAsCasas();
@@ -84,13 +86,10 @@ function configurarWebSocket() {
             turnoAtual = dadosRecebidos.turno; 
         }
 
-        // CORREÇÃO DE LOGICA VISUAL: Altera o texto limpando o estado travado de espera antiga
         if (dadosRecebidos.tipo === "sala_preenchida") {
             limparTodasAsCasas();
+            partidaIniciada = true; // Libera a renderização do turno
             turnoAtual = dadosRecebidos.turno;
-            
-            // Força a alteração da string para contornar a trava do "Aguardando..."
-            statusSimbolo.textContent = "Partida iniciada!";
             atualizarTextoStatus();
         }
 
@@ -120,16 +119,15 @@ function configurarWebSocket() {
 
         if (dadosRecebidos.tipo === "reiniciar_tabuleiro") {
             limparTodasAsCasas();
+            partidaIniciada = true;
             turnoAtual = dadosRecebidos.turnoInicial;
-            
-            // Garante que o texto de espera antigo seja limpo no reinício contínuo
-            statusSimbolo.textContent = "Nova rodada!";
             atualizarTextoStatus();
         }
 
         if (dadosRecebidos.tipo === "jogador_saiu") {
             limparTodasAsCasas();
             turnoAtual = "";
+            partidaIniciada = false; // Bloqueia e volta para tela de espera
             alert("O outro jogador desconectou. Você foi promovido a Jogador 1 (O)!");
             statusSimbolo.textContent = "Aguardando o segundo jogador entrar...";
             statusSimbolo.className = "text-sm text-yellow-600 dark:text-yellow-400 mb-4 font-bold h-5 text-center";
@@ -148,10 +146,7 @@ function configurarWebSocket() {
 }
 
 function atualizarTextoStatus() {
-    // Bloqueia a alteração apenas se a partida de fato não começou
-    if (statusSimbolo.textContent.includes("Aguardando o segundo jogador")) {
-        return;
-    }
+    if (!partidaIniciada) return; // Se não houver 2 jogadores, não renderiza texto de turno
 
     const seuTurno = meuSimbolo === turnoAtual;
     statusSimbolo.textContent = seuTurno ? "Sua vez de jogar!" : "Aguardando jogada do oponente...";
@@ -189,7 +184,7 @@ function desenharSimbolo(posicaoId, simbolo) {
 celulas.forEach(celula => {
     celula.addEventListener('click', (e) => {
         const posicaoClicada = e.target.id;
-        if (meuSimbolo === turnoAtual && e.target.innerHTML === "" && socket && socket.readyState === 1) {
+        if (partidaIniciada && meuSimbolo === turnoAtual && e.target.innerHTML === "" && socket && socket.readyState === 1) {
             socket.send(JSON.stringify({
                 tipo: "jogada",
                 posicao: posicaoClicada
