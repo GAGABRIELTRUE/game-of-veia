@@ -39,7 +39,7 @@ async function conectarSala() {
 
     // Lembre-se de alterar para o link seguro do seu Render quando fizer deploy final!
     const servidorHTTP = "https://whozap-server.onrender.com"; 
-    const servidorURL = `wss://://whozap-server.onrender.com${chave}`;
+    const servidorURL = `wss://whozap-server.onrender.com${chave}`;
     
     try {
         sala_input.disabled = true;
