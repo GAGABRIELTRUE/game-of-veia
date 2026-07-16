@@ -37,16 +37,18 @@ async function conectarSala() {
 
     if (!chave.startsWith("/")) chave = "/" + chave;
 
-    // Lembre-se de alterar para o link seguro do seu Render quando fizer deploy final!
     const servidorHTTP = "https://whozap-server.onrender.com"; 
     const servidorURL = `wss://whozap-server.onrender.com${chave}`;
     
     try {
         sala_input.disabled = true;
         sala_botao.disabled = true;
-        sala_input.placeholder = "Conectando ao servidor...";
+        
+        statusSimbolo.textContent = "Acordando o servidor no Render (pode levar 1 minuto)...";
+        statusSimbolo.className = "text-sm text-blue-500 font-bold mb-4 h-5 text-center animate-pulse";
 
         await fetch(servidorHTTP, { mode: 'no-cors' }).catch(() => {});
+        await new Promise(resolve => setTimeout(resolve, 2000));
 
         socket = new WebSocket(servidorURL);
         configurarWebSocket();
@@ -64,6 +66,7 @@ function configurarWebSocket() {
         tela_i.classList.add("hidden");
         jogo_i.classList.remove("hidden");
         statusSimbolo.textContent = "Aguardando o segundo jogador entrar...";
+        statusSimbolo.className = "text-sm text-yellow-600 dark:text-yellow-400 mb-4 font-bold h-5 text-center";
         limparTodasAsCasas();
     };
 
@@ -79,13 +82,15 @@ function configurarWebSocket() {
         if (dadosRecebidos.tipo === "regras_iniciais") {
             meuSimbolo = dadosRecebidos.seuSimbolo;
             turnoAtual = dadosRecebidos.turno; 
-            // Garante que se o jogador foi promovido com a sala aberta, o status se atualize
-            if(turnoAtual) atualizarTextoStatus(); 
         }
 
+        // CORREÇÃO DE LOGICA VISUAL: Altera o texto limpando o estado travado de espera antiga
         if (dadosRecebidos.tipo === "sala_preenchida") {
             limparTodasAsCasas();
             turnoAtual = dadosRecebidos.turno;
+            
+            // Força a alteração da string para contornar a trava do "Aguardando..."
+            statusSimbolo.textContent = "Partida iniciada!";
             atualizarTextoStatus();
         }
 
@@ -100,26 +105,25 @@ function configurarWebSocket() {
             turnoAtual = ""; 
             
             if (dadosRecebidos.vencedor === "empate") {
-                statusSimbolo.textContent = "Deu velha! O jogo empatou.";
+                statusSimbolo.textContent = "Deu velha! O jogo empatou. Reiniciando em 5s...";
                 statusSimbolo.className = "text-sm text-gray-500 font-bold mb-4 h-5 text-center";
             } else {
                 const venceu = dadosRecebidos.vencedor === meuSimbolo;
-                statusSimbolo.textContent = venceu ? "🎉 Vitória! Você ganhou!" : "❌ Derrota! Seu oponente ganhou.";
+                statusSimbolo.textContent = venceu ? "🎉 Vitória! Você ganhou! Reiniciando em 5s..." : "❌ Derrota! Seu oponente ganhou. Reiniciando em 5s...";
                 statusSimbolo.className = venceu ? "text-sm text-green-500 font-bold mb-4 h-5 text-center" : "text-sm text-red-500 font-bold mb-4 h-5 text-center";
                 
                 dadosRecebidos.linha.forEach(id => {
                     document.getElementById(id.toString()).classList.add("!text-green-500");
                 });
             }
-
-            // ADICIONA O AVISO VISUAL DO CONTADOR DE TEMPO
-            statusSimbolo.textContent += " Reiniciando em 5s...";
         }
 
-        // ESCUTA O COMANDO DE RESET AUTOMÁTICO ENVIADO PELO SERVIDOR
         if (dadosRecebidos.tipo === "reiniciar_tabuleiro") {
             limparTodasAsCasas();
             turnoAtual = dadosRecebidos.turnoInicial;
+            
+            // Garante que o texto de espera antigo seja limpo no reinício contínuo
+            statusSimbolo.textContent = "Nova rodada!";
             atualizarTextoStatus();
         }
 
@@ -127,7 +131,7 @@ function configurarWebSocket() {
             limparTodasAsCasas();
             turnoAtual = "";
             alert("O outro jogador desconectou. Você foi promovido a Jogador 1 (O)!");
-            statusSimbolo.textContent = "Aguardando um novo oponente entrar...";
+            statusSimbolo.textContent = "Aguardando o segundo jogador entrar...";
             statusSimbolo.className = "text-sm text-yellow-600 dark:text-yellow-400 mb-4 font-bold h-5 text-center";
         }
     };
@@ -144,8 +148,7 @@ function configurarWebSocket() {
 }
 
 function atualizarTextoStatus() {
-    // Se o socket ainda não recebeu a confirmação de que a sala está preenchida,
-    // mantém o texto parado em modo de espera por segurança.
+    // Bloqueia a alteração apenas se a partida de fato não começou
     if (statusSimbolo.textContent.includes("Aguardando o segundo jogador")) {
         return;
     }
@@ -154,7 +157,6 @@ function atualizarTextoStatus() {
     statusSimbolo.textContent = seuTurno ? "Sua vez de jogar!" : "Aguardando jogada do oponente...";
     statusSimbolo.className = seuTurno ? "text-sm text-green-500 dark:text-green-400 mb-4 font-bold h-5 text-center" : "text-sm text-yellow-600 dark:text-yellow-400 mb-4 font-bold h-5 text-center";
 }
-
 
 function limparTodasAsCasas() {
     celulas.forEach(celula => {
@@ -171,7 +173,7 @@ function redefinirPainelInicial() {
     sala_input.value = "";
 }
 
-function desenhoSimboloCompleto(posicaoId, simbolo) {
+function desenharSimbolo(posicaoId, simbolo) {
     const botao = document.getElementById(posicaoId.toString());
     if (!botao) return;
 
@@ -183,7 +185,6 @@ function desenhoSimboloCompleto(posicaoId, simbolo) {
         botao.classList.add("text-red-500", "dark:text-red-400");
     }
 }
-const desenharSimbolo = desenhoSimboloCompleto;
 
 celulas.forEach(celula => {
     celula.addEventListener('click', (e) => {
