@@ -37,12 +37,9 @@ async function conectarSala() {
 
     if (!chave.startsWith("/")) chave = "/" + chave;
 
-
-        // Substitua "seu-projeto-backend" pelo subdomínio real que o Render gerou para você
+    // Lembre-se de alterar para o link seguro do seu Render quando fizer deploy final!
     const servidorHTTP = "https://whozap-server.onrender.com"; 
-    const servidorURL = `wss://whozap-server.onrender.com${chave}`;
-
-
+    const servidorURL = `wss://://whozap-server.onrender.com${chave}`;
     
     try {
         sala_input.disabled = true;
@@ -81,7 +78,9 @@ function configurarWebSocket() {
 
         if (dadosRecebidos.tipo === "regras_iniciais") {
             meuSimbolo = dadosRecebidos.seuSimbolo;
-            turnoAtual = dadosRecebidos.turno; // Sincroniza o turno recebido do servidor
+            turnoAtual = dadosRecebidos.turno; 
+            // Garante que se o jogador foi promovido com a sala aberta, o status se atualize
+            if(turnoAtual) atualizarTextoStatus(); 
         }
 
         if (dadosRecebidos.tipo === "sala_preenchida") {
@@ -102,24 +101,34 @@ function configurarWebSocket() {
             
             if (dadosRecebidos.vencedor === "empate") {
                 statusSimbolo.textContent = "Deu velha! O jogo empatou.";
-                statusSimbolo.className = "text-sm text-gray-500 font-bold mb-4 h-5";
+                statusSimbolo.className = "text-sm text-gray-500 font-bold mb-4 h-5 text-center";
             } else {
                 const venceu = dadosRecebidos.vencedor === meuSimbolo;
                 statusSimbolo.textContent = venceu ? "🎉 Vitória! Você ganhou!" : "❌ Derrota! Seu oponente ganhou.";
-                statusSimbolo.className = venceu ? "text-sm text-green-500 font-bold mb-4 h-5" : "text-sm text-red-500 font-bold mb-4 h-5";
+                statusSimbolo.className = venceu ? "text-sm text-green-500 font-bold mb-4 h-5 text-center" : "text-sm text-red-500 font-bold mb-4 h-5 text-center";
                 
                 dadosRecebidos.linha.forEach(id => {
                     document.getElementById(id.toString()).classList.add("!text-green-500");
                 });
             }
+
+            // ADICIONA O AVISO VISUAL DO CONTADOR DE TEMPO
+            statusSimbolo.textContent += " Reiniciando em 5s...";
+        }
+
+        // ESCUTA O COMANDO DE RESET AUTOMÁTICO ENVIADO PELO SERVIDOR
+        if (dadosRecebidos.tipo === "reiniciar_tabuleiro") {
+            limparTodasAsCasas();
+            turnoAtual = dadosRecebidos.turnoInicial;
+            atualizarTextoStatus();
         }
 
         if (dadosRecebidos.tipo === "jogador_saiu") {
             limparTodasAsCasas();
             turnoAtual = "";
-            alert("O outro jogador desconectou. O tabuleiro foi limpo.");
+            alert("O outro jogador desconectou. Você foi promovido a Jogador 1 (O)!");
             statusSimbolo.textContent = "Aguardando um novo oponente entrar...";
-            statusSimbolo.className = "text-sm text-yellow-600 dark:text-yellow-400 mb-4 font-bold h-5";
+            statusSimbolo.className = "text-sm text-yellow-600 dark:text-yellow-400 mb-4 font-bold h-5 text-center";
         }
     };
 
@@ -137,7 +146,7 @@ function configurarWebSocket() {
 function atualizarTextoStatus() {
     const seuTurno = meuSimbolo === turnoAtual;
     statusSimbolo.textContent = seuTurno ? "Sua vez de jogar!" : "Aguardando jogada do oponente...";
-    statusSimbolo.className = seuTurno ? "text-sm text-green-500 dark:text-green-400 mb-4 font-bold h-5" : "text-sm text-yellow-600 dark:text-yellow-400 mb-4 font-bold h-5";
+    statusSimbolo.className = seuTurno ? "text-sm text-green-500 dark:text-green-400 mb-4 font-bold h-5 text-center" : "text-sm text-yellow-600 dark:text-yellow-400 mb-4 font-bold h-5 text-center";
 }
 
 function limparTodasAsCasas() {
@@ -167,7 +176,6 @@ function desenhoSimboloCompleto(posicaoId, simbolo) {
         botao.classList.add("text-red-500", "dark:text-red-400");
     }
 }
-// Renomeando chamada interna para bater com a função acima
 const desenharSimbolo = desenhoSimboloCompleto;
 
 celulas.forEach(celula => {
