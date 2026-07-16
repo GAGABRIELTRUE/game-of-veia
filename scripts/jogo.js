@@ -40,7 +40,7 @@ async function conectarSala() {
 
     // Substitua "seu-projeto-backend" pelo subdomínio real que o Render gerou para você
     const servidorHTTP = "https://onrender.com"; 
-    const servidorURL = `wss://://whozap-server.onrender.com${chave}`;
+    const servidorURL = `wss://whozap-server.onrender.com${chave}`;
 
 
 
