@@ -38,8 +38,8 @@ async function conectarSala() {
 
     if (!chave.startsWith("/")) chave = "/" + chave;
 
-    const servidorHTTP = "https://onrender.com"; 
-    const servidorURL = `wss://://onrender.com${chave}`;
+    const servidorHTTP = "https://whozap-server.onrender.com"; 
+    const servidorURL = `wss://whozap-server.onrender.com${chave}`;
     
     try {
         sala_input.disabled = true;
