@@ -39,7 +39,6 @@ async function conectarSala() {
     if (!chave.startsWith("/")) chave = "/" + chave;
 
     const servidorHTTP = "https://whozap-server.onrender.com"; 
-    const servidorURL = `wss://whozap-server.onrebatata.com${chave}`;
     
     try {
         sala_input.disabled = true;
@@ -49,9 +48,8 @@ async function conectarSala() {
         statusSimbolo.className = "text-sm text-blue-500 font-bold mb-4 h-5 text-center animate-pulse";
 
         await fetch(servidorHTTP, { mode: 'no-cors' }).catch(() => {});
-        await new Promise(resolve => setTimeout(resolve, 2000));
-
-        socket = new WebSocket(servidorURL);
+        
+        socket = new WebSocket(`wss://whozap-server.onrender.com${chave}`);
         configurarWebSocket();
         
         nomeSala.textContent = chave.replace("/", "");
